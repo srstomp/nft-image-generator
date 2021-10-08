@@ -1,6 +1,6 @@
 .idea
 python/resources/
-
+python/generated/
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
