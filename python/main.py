@@ -1,4 +1,5 @@
 from PIL import Image
+from PIL import ImageColor
 import numpy as np
 import random
 import os
@@ -8,37 +9,34 @@ logging.basicConfig(format='%(asctime)s | %(levelname)s: %(message)s', level=log
 logger = logging.getLogger()
 
 ROOT_DIR = os.path.dirname(__file__)
-RESOURCES_DIR = f'{ROOT_DIR}/resources/'
+RESOURCES_DIR = f'{ROOT_DIR}/resources'
+DESTINATION_DIR = f'{ROOT_DIR}/generated'
+
+def get_random_color():
+    return (random.randint(0,255), random.randint(0,255), random.randint(0,255))
 
 
-def change_image_color(source, ):
-    img = source.convert("RGB")
+def change_image_color(src, org_color, new_color):
+    im = Image.open(src)
+    im = im.convert('RGBA')
+    data = np.array(im)  # "data" is a height x width x 4 numpy array
+    red, green, blue, alpha = data.T  # Temporarily unpack the bands for readability
 
-    data = img.getdata()
+    rgb = ImageColor.getrgb(org_color)
+    areas = (red == rgb[0]) & (blue == rgb[1]) & (green == rgb[2])
+    data[..., :-1][areas.T] = new_color  # Transpose back needed
 
-    new_image_data = []
-    for item in data:
-        # change all white (also shades of whites) pixels to yellow
-        if item[0] in list(range(190, 256)):
-            new_image_data.append((255, 204, 100))
-        else:
-            new_image_data.append(item)
-
-    # update image data
-    img.putdata(new_image_data)
-
-    # save new image
-    #img.save("test_image_altered_background.jpg")
-
-    # show image in preview
-    #img.show()
+    return Image.fromarray(data)
 
 
 def generate_background():
-    bg = Image.open(f'{RESOURCES_DIR}bg.png')
-    bg = alt
+    return change_image_color(f'{RESOURCES_DIR}/bg.png', '#FFFFFF', get_random_color())
 
 
+def save_image(img, name):
+    img = img.resize((1000, 1000),Image.NEAREST)
+    #img.save(f'{DESTINATION_DIR}/{name}.png')
+    img.show()
 
 
 def generate_image(index):
@@ -47,17 +45,18 @@ def generate_image(index):
     :return:
     '''
     logger.debug(f'Fetch base image')
+    image = generate_background()
+
+    image.show()
+    save_image(image, 'blabla')
 
 
-def generate_batch(amount):
+def generate_batch(amount, file_name):
     logger.info(f'Started creating {amount} images')
-    logger.info(RESOURCES_DIR)
     for i in range(amount):
         logger.info(f'Image {i} of {amount}')
-        generate_image(i)
+        generate_image(f'{file_name}_{i}')
 
 
 if __name__ == '__main__':
-    generate_batch(100)
-
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
+    generate_batch(1, 'letter')
